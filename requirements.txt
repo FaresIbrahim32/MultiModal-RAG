@@ -1,16 +1,21 @@
+# Core dependencies
 streamlit>=1.32.0
-yt-dlp>=2023.11.16
 moviepy>=1.0.3
+imageio>=2.9.0
+imageio-ffmpeg>=0.4.7
+yt-dlp>=2023.11.16
 deepgram-sdk>=3.0.0
 google-generativeai>=0.3.0
+
+# LlamaIndex related
 llama-index-core>=0.10.0
 llama-index-embeddings-huggingface>=0.1.0
 llama-index-vector-stores-lancedb>=0.1.0
 llama-index-multi-modal-llms-gemini>=0.1.0
-sentence-transformers>=2.2.2
-pytube>=15.0.0
-SpeechRecognition>=3.10.0
+
+# Audio/Image processing
 pydub>=0.25.1
-matplotlib>=3.7.0
+SpeechRecognition>=3.10.0
 Pillow>=10.0.0
-ffmpeg-python>=0.2.0
+matplotlib>=3.7.0
+sentence-transformers>=2.2.2
