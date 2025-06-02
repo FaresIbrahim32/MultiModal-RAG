@@ -1,4 +1,5 @@
 absl-py==1.4.0
+streamlit
 accelerate==1.7.0
 aenum==3.1.16
 aiofiles==24.1.0
