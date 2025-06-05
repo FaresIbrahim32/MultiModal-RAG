@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Video Processor - Home{% endblock %}
+
+{% block content %}
+<h1>YouTube Video RAG Processor</h1>
+<p>Upload a YouTube video URL to analyze and extract insights from the video content.</p>
+
+<form action="/" method="post">
+    <div class="form-group">
+        <label for="video">YouTube Video URL:</label>
+        <input type="text" id="video" name="video" placeholder="https://www.youtube.com/watch?v=..." required>
+    </div>
+    <input type="submit" value="Process Video">
+</form>
+
+<div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px;">
+    <h3>Instructions:</h3>
+    <ol>
+        <li>First, upload your YouTube cookies file using the "Upload Cookies" link above</li>
+        <li>Paste your YouTube video URL in the field above</li>
+        <li>Click "Process Video" to start analysis</li>
+        <li>Wait for processing to complete (this may take several minutes)</li>
+    </ol>
+</div>
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Results - Video RAG{% endblock %}
+
+{% block content %}
+<style>
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    .metadata {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 25px;
+    }
+    .metadata h3 {
+        margin-top: 0;
+        color: #495057;
+    }
+    .metadata-item {
+        margin: 10px 0;
+    }
+    .metadata-label {
+        font-weight: bold;
+        color: #6c757d;
+    }
+    .analysis {
+        background-color: #fff;
+        padding: 25px;
+        border-left: 4px solid #007bff;
+        margin: 25px 0;
+    }
+    .analysis h3 {
+        color: #007bff;
+        margin-top: 0;
+    }
+    .analysis-content {
+        white-space: pre-wrap;
+        font-size: 16px;
+        line-height: 1.8;
+    }
+    .query-feature {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 2px solid #ff6b9d;
+        }
+        .query-feature h3 {
+            margin-top: 0;
+            color: #d63384;
+        }
+        .query-feature p {
+            margin-bottom: 15px;
+            color: #6f2c91;
+        }
+    .stats {
+        display: flex;
+        justify-content: space-around;
+        background-color: #e9ecef;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+    }
+    .stat-item {
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+    }
+    .stat-label {
+        font-size: 12px;
+        color: #6c757d;
+        text-transform: uppercase;
+    }
+    .action-buttons {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+    }
+    .btn {
+        padding: 12px 24px;
+        margin: 0 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    .btn-secondary:hover {
+        background-color: #545b62;
+    }
+    .success-badge {
+        background-color: #28a745;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .warning-badge {
+        background-color: #ffc107;
+        color: #212529;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .session-info {
+        background-color: #e9ecef;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 15px 0;
+        font-family: monospace;
+        font-size: 14px;
+    }
+</style>
+
+<div class="header">
+    <h1>🎬 Video Analysis Complete</h1>
+    <p>Your video has been successfully analyzed using AI</p>
+</div>
+
+<!-- Show Session ID for reference -->
+<div class="session-info">
+    <strong>Session ID:</strong> {{ request.endpoint.split('/')[-1] if '/' in request.endpoint else 'Unknown' }}
+    <script>
+        // Extract session ID from current URL
+        const currentUrl = window.location.pathname;
+        const sessionId = currentUrl.split('/').pop();
+        document.querySelector('.session-info').innerHTML = `<strong>Session ID:</strong> ${sessionId} <button onclick="navigator.clipboard.writeText('${sessionId}').then(() => alert('Session ID copied!'))" style="margin-left: 10px; padding: 2px 8px; font-size: 12px;">Copy</button>`;
+    </script>
+</div>
+
+{% if metadata %}
+<div class="metadata">
+    <h3>📋 Video Information</h3>
+    <div class="metadata-item">
+        <span class="metadata-label">Title:</span> {{ metadata.Title }}
+    </div>
+    <div class="metadata-item">
+        <span class="metadata-label">Author:</span> {{ metadata.Author }}
+    </div>
+    <div class="metadata-item">
+        <span class="metadata-label">Views:</span> {{ "{:,}".format(metadata.Views) if metadata.Views else "N/A" }}
+    </div>
+</div>
+{% endif %}
+
+<div class="stats">
+    <div class="stat-item">
+        <div class="stat-number">{{ frames_analyzed or 0 }}</div>
+        <div class="stat-label">Frames Analyzed</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">
+            {% if transcript_available %}
+                <span class="success-badge">✓</span>
+            {% else %}
+                <span class="warning-badge">!</span>
+            {% endif %}
+        </div>
+        <div class="stat-label">
+            {% if transcript_available %}
+                Transcript Available
+            {% else %}
+                No Transcript
+            {% endif %}
+        </div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">AI</div>
+        <div class="stat-label">Powered Analysis</div>
+    </div>
+</div>
+
+{% if result %}
+<div class="analysis">
+    <h3>🤖 AI Analysis</h3>
+    <div class="analysis-content">{{ result }}</div>
+</div>
+{% else %}
+<div class="analysis">
+    <h3>❌ No Results</h3>
+    <p>No analysis results were generated. This might be due to:</p>
+    <ul>
+        <li>Video processing failed</li>
+        <li>AI analysis encountered an error</li>
+        <li>Session expired</li>
+    </ul>
+</div>
+{% endif %}
+
+<div class="action-buttons">
+    <a href="/" class="btn btn-primary">🎬 Analyze Another Video</a>
+    <a href="/upload" class="btn btn-secondary">📁 Upload New Cookies</a>
+</div>
+
+ <div class="query-feature">
+            <h3>🔍 New Feature: Search Video Frames!</h3>
+            <p>You can now search through the video frames using natural language queries like "find me a frame with a car" or "show me where people are talking".</p>
+            <a href="{{ url_for('query_frames', session_id=request.view_args.session_id) }}" class="btn btn-primary">
+                🔍 Search Frames
+            </a>
+        </div>
+{% endblock %}

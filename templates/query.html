@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Video Frames</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .video-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #007bff;
+        }
+        .search-form {
+            margin-bottom: 30px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .search-input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .search-btn {
+            background: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .search-btn:hover {
+            background: #0056b3;
+        }
+        .results-container {
+            margin-top: 30px;
+        }
+        .frame-result {
+            display: flex;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            transition: transform 0.2s;
+        }
+        .frame-result:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .frame-image {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 20px;
+            border: 2px solid #ddd;
+        }
+        .frame-info {
+            flex: 1;
+        }
+        .frame-number {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .frame-description {
+            color: #555;
+            line-height: 1.6;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        .search-examples {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        .search-examples h4 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        .search-examples ul {
+            margin-bottom: 0;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .query-header {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        .results-count {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('result', session_id=session_id) }}" class="back-link">← Back to Analysis Results</a>
+        
+        <h1>🔍 Search Video Frames</h1>
+        
+        {% if metadata %}
+        <div class="video-info">
+            <h3>📹 {{ metadata.Title }}</h3>
+            <p><strong>Author:</strong> {{ metadata.Author }}</p>
+            <p><strong>Views:</strong> {{ "{:,}".format(metadata.Views) }}</p>
+        </div>
+        {% endif %}
+
+        <div class="search-examples">
+            <h4>💡 Example Queries:</h4>
+            <ul>
+                <li>"find me a frame with a car"</li>
+                <li>"show me where people are talking"</li>
+                <li>"find scenes with text or writing"</li>
+                <li>"look for outdoor scenes"</li>
+                <li>"find frames with animals"</li>
+                <li>"show me close-up shots"</li>
+            </ul>
+        </div>
+
+        <form method="POST" class="search-form">
+            <input type="text" 
+                   name="query" 
+                   class="search-input" 
+                   placeholder="Describe what you're looking for in the video..."
+                   value="{{ query or '' }}"
+                   required>
+            <button type="submit" class="search-btn">🔍 Search Frames</button>
+        </form>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="error-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if search_results %}
+            {% if query %}
+                <div class="query-header">
+                    <strong>Search Query:</strong> "{{ query }}"
+                </div>
+            {% endif %}
+
+            {% if search_results.error %}
+                <div class="error-message">
+                    <strong>Error:</strong> {{ search_results.error }}
+                </div>
+            {% elif search_results.matches %}
+                <div class="results-count">
+                    Found {{ search_results.total_found }} matching frame(s)
+                </div>
+                
+                <div class="results-container">
+                    {% for match in search_results.matches %}
+                    <div class="frame-result">
+                        <img src="{{ url_for('serve_frame', session_id=session_id, frame_name=match.frame_name) }}" 
+                             alt="Frame {{ match.frame_number }}" 
+                             class="frame-image">
+                        <div class="frame-info">
+                            <div class="frame-number">Frame {{ match.frame_number }}</div>
+                            <div class="frame-description">{{ match.description }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-results">
+                    <h3>🤷‍♂️ No matching frames found</h3>
+                    <p>Try rephrasing your search query or using different keywords.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>

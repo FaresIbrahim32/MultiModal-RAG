@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Cookies File{% endblock %}
+
+{% block content %}
+<h1>Upload Cookies File</h1>
+<p>Upload your YouTube cookies.txt or cookies.csv file to enable video downloads.</p>
+
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="file">Select Cookies File:</label>
+        <input type="file" name="file" accept=".txt,.csv" required>
+        <small style="color: #666; margin-top: 5px; display: block;">
+            Accepted formats: .txt, .csv
+        </small>
+    </div>
+    <input type="submit" value="Upload">
+</form>
+
+<div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px;">
+    <h3>How to get your cookies file:</h3>
+    <ol>
+        <li>Install a browser extension like "Get cookies.txt LOCALLY" for Chrome/Firefox</li>
+        <li>Go to YouTube and make sure you're logged in</li>
+        <li>Use the extension to export cookies for youtube.com</li>
+        <li>Save the file as cookies.txt or cookies.csv</li>
+        <li>Upload the file here</li>
+    </ol>
+</div>
+{% endblock %}

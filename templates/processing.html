@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Video - Video RAG</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background-color: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 15px;
+        }
+        .status-text {
+            font-size: 18px;
+            margin: 20px 0;
+            color: #333;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .back-button {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Processing Your Video</h1>
+        
+        <div class="spinner" id="spinner"></div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="status-text" id="statusText">Initializing...</div>
+        
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        
+        <a href="/" class="back-button" id="backButton" style="display: none;">← Back to Home</a>
+    </div>
+
+    <script>
+        const sessionId = "{{ session_id }}";
+        
+        function copySessionId() {
+            navigator.clipboard.writeText(sessionId).then(() => {
+                alert('Session ID copied to clipboard!');
+            });
+        }
+        
+        function updateStatus() {
+            fetch(`/status/${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Status:', data);
+                    
+                    const progressFill = document.getElementById('progressFill');
+                    const statusText = document.getElementById('statusText');
+                    const errorMessage = document.getElementById('errorMessage');
+                    const spinner = document.getElementById('spinner');
+                    const backButton = document.getElementById('backButton');
+                    
+                    if (data.status === 'downloading') {
+                        statusText.textContent = '📥 Downloading video...';
+                        progressFill.style.width = (data.progress || 10) + '%';
+                    } else if (data.status === 'extracting') {
+                        statusText.textContent = '🎬 Extracting frames and audio...';
+                        progressFill.style.width = (data.progress || 30) + '%';
+                    } else if (data.status === 'transcribing') {
+                        statusText.textContent = '📝 Transcribing audio...';
+                        progressFill.style.width = (data.progress || 50) + '%';
+                    } else if (data.status === 'analyzing') {
+                        statusText.textContent = '🔍 Building search index...';
+                        progressFill.style.width = (data.progress || 70) + '%';
+                    } else if (data.status === 'generating') {
+                        statusText.textContent = '🤖 Generating AI analysis...';
+                        progressFill.style.width = (data.progress || 90) + '%';
+                    } else if (data.status === 'completed') {
+                        statusText.textContent = '✅ Analysis complete! Redirecting...';
+                        progressFill.style.width = '100%';
+                        spinner.style.display = 'none';
+                        
+                        // Redirect to results page
+                        setTimeout(() => {
+                            window.location.href = `/result/${sessionId}`;
+                        }, 2000);
+                        
+                        return; // Stop polling
+                    } else if (data.status === 'error') {
+                        statusText.textContent = '❌ Processing failed';
+                        errorMessage.textContent = data.message || 'An unknown error occurred';
+                        errorMessage.style.display = 'block';
+                        spinner.style.display = 'none';
+                        backButton.style.display = 'inline-block';
+                        return; // Stop polling
+                    } else if (data.status === 'not_found') {
+                        statusText.textContent = '❌ Session not found';
+                        errorMessage.textContent = 'Processing session not found. Please try again.';
+                        errorMessage.style.display = 'block';
+                        spinner.style.display = 'none';
+                        backButton.style.display = 'inline-block';
+                        return; // Stop polling
+                    }
+                    
+                    // Continue polling
+                    setTimeout(updateStatus, 2000); // Check every 2 seconds
+                })
+                .catch(error => {
+                    console.error('Error fetching status:', error);
+                    document.getElementById('statusText').textContent = '❌ Connection error';
+                    document.getElementById('errorMessage').textContent = 'Failed to check processing status';
+                    document.getElementById('errorMessage').style.display = 'block';
+                    document.getElementById('spinner').style.display = 'none';
+                    document.getElementById('backButton').style.display = 'inline-block';
+                });
+        }
+        
+        // Start status checking when page loads
+        updateStatus();
+    </script>
+</body>
+</html>
